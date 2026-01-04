@@ -9,6 +9,7 @@ export interface FamilyMember {
   generation: number | null;
   sibling_order: number | null;
   father_id: number | null;
+  father_name: string | null;
   gender: "男" | "女" | null;
   official_position: string | null;
   is_alive: boolean;
@@ -50,7 +51,31 @@ export async function fetchFamilyMembers(
     return { data: [], count: 0, error: error.message };
   }
 
-  return { data: data || [], count: count || 0, error: null };
+  // 获取所有父亲 ID
+  const fatherIds = (data || [])
+    .map((item) => item.father_id)
+    .filter((id): id is number => id !== null);
+
+  // 批量查询父亲姓名
+  let fatherMap: Record<number, string> = {};
+  if (fatherIds.length > 0) {
+    const { data: fathers } = await supabase
+      .from("family_members")
+      .select("id, name")
+      .in("id", fatherIds);
+
+    if (fathers) {
+      fatherMap = Object.fromEntries(fathers.map((f) => [f.id, f.name]));
+    }
+  }
+
+  // 转换数据格式，添加 father_name
+  const transformedData: FamilyMember[] = (data || []).map((item) => ({
+    ...item,
+    father_name: item.father_id ? fatherMap[item.father_id] || null : null,
+  }));
+
+  return { data: transformedData, count: count || 0, error: null };
 }
 
 export interface CreateMemberInput {
@@ -134,6 +159,40 @@ export async function fetchAllMembersForSelect(): Promise<
 
 export interface UpdateMemberInput extends CreateMemberInput {
   id: number;
+}
+
+// 根据 ID 获取单个成员
+export async function fetchMemberById(
+  id: number
+): Promise<FamilyMember | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("family_members")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching member by id:", error);
+    return null;
+  }
+
+  // 如果有父亲ID，查询父亲姓名
+  let father_name: string | null = null;
+  if (data.father_id) {
+    const { data: father } = await supabase
+      .from("family_members")
+      .select("name")
+      .eq("id", data.father_id)
+      .single();
+    father_name = father?.name || null;
+  }
+
+  return {
+    ...data,
+    father_name,
+  } as FamilyMember;
 }
 
 export async function updateFamilyMember(

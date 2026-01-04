@@ -36,6 +36,7 @@ import {
   updateFamilyMember,
   deleteFamilyMembers,
   fetchAllMembersForSelect,
+  fetchMemberById,
 } from "./actions";
 
 interface FamilyMembersTableProps {
@@ -484,7 +485,7 @@ export function FamilyMembersTable({
               <TableHead>姓名</TableHead>
               <TableHead className="w-20">世代</TableHead>
               <TableHead className="w-20">排行</TableHead>
-              <TableHead className="w-20">父亲ID</TableHead>
+              <TableHead className="w-24">父亲</TableHead>
               <TableHead className="w-16">性别</TableHead>
               <TableHead>官职</TableHead>
               <TableHead className="w-20">在世</TableHead>
@@ -527,7 +528,24 @@ export function FamilyMembersTable({
                   </TableCell>
                   <TableCell>{member.generation ?? "-"}</TableCell>
                   <TableCell>{member.sibling_order ?? "-"}</TableCell>
-                  <TableCell>{member.father_id ?? "-"}</TableCell>
+                  <TableCell>
+                    {member.father_id && member.father_name ? (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const fatherData = await fetchMemberById(member.father_id as number);
+                          if (fatherData) {
+                            handleOpenEditDialog(fatherData);
+                          }
+                        }}
+                        className="text-primary hover:underline cursor-pointer text-left"
+                      >
+                        {member.father_name}
+                      </button>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>{member.gender ?? "-"}</TableCell>
                   <TableCell>{member.official_position ?? "-"}</TableCell>
                   <TableCell>{member.is_alive ? "是" : "否"}</TableCell>
