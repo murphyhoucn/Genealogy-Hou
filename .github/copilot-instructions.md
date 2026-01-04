@@ -9,6 +9,7 @@
 - **框架**: Next.js 15 (App Router, RSC)
 - **后端/数据库**: Supabase (PostgreSQL + Auth + Realtime)
 - **UI**: shadcn/ui (new-york 风格) + Tailwind CSS + lucide-react 图标
+- **可视化**: @xyflow/react 实现族谱关系图
 - **主题**: next-themes 明暗模式
 
 ## Supabase 客户端规范（必读）
@@ -19,7 +20,7 @@
 |------|------|----------|
 | Client Component | `lib/supabase/client.ts` | `createClient()` 同步 |
 | Server Component / Server Actions | `lib/supabase/server.ts` | `await createClient()` 异步 |
-| Middleware | `lib/supabase/proxy.ts` | `updateSession(request)` |
+| Middleware | `lib/supabase/middleware.ts` | `updateSession(request)` |
 
 ```typescript
 // ✅ Server Actions 中 (app/family-tree/actions.ts 参考)
@@ -38,12 +39,12 @@ const supabase = createClient();
 ### Server Component + Client Component 分离模式
 参考 `app/family-tree/` 目录结构：
 - `page.tsx` - 页面入口，处理 URL 参数，使用 Suspense 包裹
-- `family-members-loader.tsx` - Server Component，负责数据获取
-- `family-members-table.tsx` - Client Component (`"use client"`)，负责交互逻辑
-- `actions.ts` - Server Actions (`"use server"`)，处理 CRUD 操作
+- `*-loader.tsx` - Server Component，负责数据获取
+- `*-table.tsx` / `*-graph.tsx` - Client Component (`"use client"`)，负责交互
+- `actions.ts` - Server Actions (`"use server"`)，处理 CRUD
 
 ```tsx
-// page.tsx 模式
+// page.tsx 标准模式
 export default function Page({ searchParams }: PageProps) {
   return (
     <Suspense fallback={<Skeleton />}>
@@ -53,14 +54,16 @@ export default function Page({ searchParams }: PageProps) {
 }
 ```
 
-### Server Actions 模式
-参考 `app/family-tree/actions.ts`：
-- 使用 `revalidatePath()` 刷新缓存
-- 返回统一格式 `{ success: boolean; error: string | null }`
-- 关联查询时使用批量查询而非 JOIN（Supabase 外键约束可能未配置）
-
+### Server Actions 返回格式
 ```typescript
-// 批量查询关联数据的正确方式
+// 统一返回格式
+{ success: boolean; error: string | null }
+// 或带数据
+{ data: T[]; count: number; error: string | null }
+```
+
+### 批量查询关联数据（避免 JOIN）
+```typescript
 const fatherIds = data.map(item => item.father_id).filter(Boolean);
 const { data: fathers } = await supabase
   .from("family_members")
@@ -69,10 +72,26 @@ const { data: fathers } = await supabase
 const fatherMap = Object.fromEntries(fathers.map(f => [f.id, f.name]));
 ```
 
+## React Flow 可视化开发
+
+参考 `app/family-tree/graph/` 目录：
+- 自定义节点定义在 `family-node.tsx`，使用 `memo()` 优化
+- 节点数据类型需包含 `[key: string]: unknown` 索引签名
+- CSS 导入使用 `// @ts-expect-error` 注释抑制类型错误
+- 主题适配：使用 CSS 变量 `hsl(var(--foreground))` 等
+
+```tsx
+// 自定义节点数据类型
+export interface FamilyNodeData extends FamilyMemberNode {
+  isHighlighted?: boolean;
+  [key: string]: unknown;  // 必需的索引签名
+}
+```
+
 ## 路由与认证
 
 - 公开路由: `/`, `/noauth/*`, `/auth/*`, `/login/*`
-- 受保护路由: 其他所有路径
+- 受保护路由: 其他所有路径（自动跳转 `/auth/login`）
 - 认证检查使用 `supabase.auth.getClaims()`（比 `getUser()` 更快）
 
 ## 数据库 Schema
@@ -99,6 +118,7 @@ official_position, is_alive, spouse, remarks, updated_at
 - 使用 `cn()` 合并 className
 - 弹窗使用 shadcn Dialog 组件
 - 表格使用 shadcn Table + 手动分页
+- 图标统一使用 lucide-react
 
 ## 开发命令
 
@@ -115,3 +135,7 @@ npm run lint   # ESLint 检查
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
+
+## 相关指令文件
+
+- `.github/instructions/react-flow.instructions.md` - React Flow 详细用法
