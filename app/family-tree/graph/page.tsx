@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { fetchAllFamilyMembers } from "./actions";
 import { FamilyTreeGraph } from "./family-tree-graph";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Box } from "lucide-react";
 
 function GraphSkeleton() {
   return (
@@ -35,7 +38,15 @@ async function GraphLoader() {
 export default function FamilyTreeGraphPage() {
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">族谱关系图</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">族谱关系图</h1>
+        <Button variant="outline" asChild>
+          <Link href="/family-tree/graph-3d">
+            <Box className="mr-2 h-4 w-4" />
+            切换到 3D 视图
+          </Link>
+        </Button>
+      </div>
 
       <Suspense fallback={<GraphSkeleton />}>
         <GraphLoader />

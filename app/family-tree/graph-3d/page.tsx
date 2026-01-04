@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import { fetchAllFamilyMembers } from "../graph/actions";
 import { FamilyForceGraph } from "./force-graph";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "族谱关系图 (3D) | Liu Family",
@@ -35,6 +38,12 @@ export default function FamilyTreeGraph3DPage() {
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">族谱关系图 (3D)</h1>
+        <Button variant="outline" asChild>
+          <Link href="/family-tree/graph">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            切换到 2D 视图
+          </Link>
+        </Button>
       </div>
       
       <Suspense fallback={
