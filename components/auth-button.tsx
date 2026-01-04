@@ -14,6 +14,9 @@ export async function AuthButton() {
   return user ? (
     <div className="flex items-center gap-4">
       你好, {user.email}!
+      <Button asChild size="sm" variant={"outline"}>
+        <Link href="/family-tree">数据维护</Link>
+      </Button>
       <LogoutButton />
     </div>
   ) : (
