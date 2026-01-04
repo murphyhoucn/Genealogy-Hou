@@ -38,6 +38,8 @@ import { FamilyMemberNodeType, type FamilyNodeData } from "./family-node";
 import type { FamilyMemberNode } from "./actions";
 import dagre from "@dagrejs/dagre";
 
+import { MemberDetailDialog } from "../member-detail-dialog";
+
 const nodeTypes: NodeTypes = {
   familyMember: FamilyMemberNodeType,
 };
@@ -323,93 +325,12 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
       </ReactFlow>
 
       {/* 成员详情弹窗 */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              成员详情
-            </DialogTitle>
-            <DialogDescription>查看家族成员的详细信息</DialogDescription>
-          </DialogHeader>
-
-          {selectedMember && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">{selectedMember.name}</span>
-                <div className="flex gap-2">
-                  {selectedMember.gender && (
-                    <Badge
-                      variant={selectedMember.gender === "男" ? "default" : "secondary"}
-                    >
-                      {selectedMember.gender}
-                    </Badge>
-                  )}
-                  {!selectedMember.is_alive && (
-                    <Badge variant="outline">已故</Badge>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">世代</span>
-                  <p className="font-medium">
-                    {selectedMember.generation !== null
-                      ? `第 ${selectedMember.generation} 世`
-                      : "-"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">排行</span>
-                  <p className="font-medium">
-                    {selectedMember.sibling_order !== null
-                      ? `第 ${selectedMember.sibling_order}`
-                      : "-"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">父亲</span>
-                  <p className="font-medium">
-                    {getFatherName(selectedMember.father_id) || "-"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">配偶</span>
-                  <p className="font-medium">{selectedMember.spouse || "-"}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">生日</span>
-                  <p className="font-medium">
-                    {selectedMember.birthday
-                      ? (() => {
-                          const [y, m, d] = selectedMember.birthday.split("-");
-                          return `${y}年${m}月${d}日`;
-                        })()
-                      : "-"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground">居住地</span>
-                  <p className="font-medium">{selectedMember.residence_place || "-"}</p>
-                </div>
-                {selectedMember.official_position && (
-                  <div className="col-span-2 space-y-1">
-                    <span className="text-muted-foreground">官职</span>
-                    <p className="font-medium">{selectedMember.official_position}</p>
-                  </div>
-                )}
-                {selectedMember.remarks && (
-                  <div className="col-span-2 space-y-1">
-                    <span className="text-muted-foreground">备注</span>
-                    <p className="font-medium text-wrap">{selectedMember.remarks}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <MemberDetailDialog
+        isOpen={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        member={selectedMember}
+        fatherName={getFatherName(selectedMember?.father_id || null)}
+      />
     </div>
   );
 }

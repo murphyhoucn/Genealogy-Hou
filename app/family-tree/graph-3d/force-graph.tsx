@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import SpriteText from "three-spritetext";
 import { useTheme } from "next-themes";
+import { MemberDetailDialog } from "../member-detail-dialog";
 
 // 动态导入 ForceGraph3D，禁用 SSR
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
@@ -251,90 +252,12 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
         }}
       />
 
-      {/* 详情弹窗 */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              {selectedMember?.name}
-            </DialogTitle>
-            <DialogDescription>家族成员详细信息</DialogDescription>
-          </DialogHeader>
-
-          {selectedMember && (
-            <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-               <div className="space-y-1">
-                <span className="text-muted-foreground">世代</span>
-                <p className="font-medium">
-                  {selectedMember.generation ? `第 ${selectedMember.generation} 世` : "-"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-muted-foreground">性别</span>
-                <div className="flex gap-2">
-                  <Badge variant={selectedMember.gender === "男" ? "default" : "secondary"}>
-                    {selectedMember.gender || "-"}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                <span className="text-muted-foreground">父亲</span>
-                <p className="font-medium">{getFatherName(selectedMember.father_id) || "-"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-muted-foreground">排行</span>
-                <p className="font-medium">{selectedMember.sibling_order ? `第 ${selectedMember.sibling_order}` : "-"}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-muted-foreground">配偶</span>
-                <p className="font-medium">{selectedMember.spouse || "-"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-muted-foreground">生日</span>
-                <p className="font-medium">
-                  {selectedMember.birthday
-                    ? (() => {
-                        const [y, m, d] = selectedMember.birthday.split("-");
-                        return `${y}年${m}月${d}日`;
-                      })()
-                    : "-"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-muted-foreground">居住地</span>
-                <p className="font-medium">{selectedMember.residence_place || "-"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-muted-foreground">状态</span>
-                <p className="font-medium">
-                  {selectedMember.is_alive ? (
-                    <span className="text-green-600">在世</span>
-                  ) : (
-                    <span className="text-muted-foreground">已故</span>
-                  )}
-                </p>
-              </div>
-
-              {selectedMember.official_position && (
-                <div className="col-span-2 space-y-1">
-                  <span className="text-muted-foreground">官职</span>
-                  <p className="font-medium">{selectedMember.official_position}</p>
-                </div>
-              )}
-              
-              {selectedMember.remarks && (
-                <div className="col-span-2 space-y-1">
-                  <span className="text-muted-foreground">备注</span>
-                  <p className="font-medium whitespace-pre-wrap">{selectedMember.remarks}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <MemberDetailDialog
+        isOpen={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        member={selectedMember}
+        fatherName={getFatherName(selectedMember?.father_id || null)}
+      />
     </div>
   );
 }
