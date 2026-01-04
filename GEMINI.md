@@ -56,6 +56,11 @@ const supabase = createClient();
 - 基于 `@xyflow/react` 实现。
 - 自动生成树形结构图，展示成员关系。
 
+### 3D 族谱可视化 (`app/family-tree/graph-3d/`)
+- 基于 `react-force-graph-3d` 实现。
+- 提供三维视角的力导向图，支持全屏、搜索定位、节点点击详情等功能。
+- 使用 `three-spritetext` 渲染清晰的文字标签。
+
 ## 数据库 Schema
 
 ### family_members 表（族谱核心表）
