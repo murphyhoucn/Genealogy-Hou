@@ -44,7 +44,7 @@ const supabase = createClient();
 ### 认证流程
 
 - 使用 `supabase.auth.getClaims()` 获取用户信息（比 `getUser()` 更快）
-- 登录成功后跳转到 `/protected`
+- 登录成功后跳转到 `/`
 - 认证相关页面位于 `app/auth/` 目录
 
 ## 核心功能模块
