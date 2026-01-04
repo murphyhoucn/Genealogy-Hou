@@ -82,7 +82,6 @@ official_position, is_alive, spouse, remarks, birthday, death_date, residence_pl
 ```bash
 npm run dev    # 启动开发服务器 (localhost:3000)
 npm run build  # 生产构建
-npm run lint   # ESLint 检查
 ```
 
 ## 组件规范

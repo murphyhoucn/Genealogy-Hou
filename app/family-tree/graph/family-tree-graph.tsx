@@ -14,26 +14,21 @@ import {
   type Edge,
   BackgroundVariant,
   type NodeTypes,
+  getNodesBounds,
+  getViewportForBounds,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import {
   RotateCcw,
   Maximize,
   Minimize,
   Search,
   X,
-  User,
+  Download,
 } from "lucide-react";
+import { toPng } from "html-to-image";
 import { FamilyMemberNodeType, type FamilyNodeData } from "./family-node";
 import type { FamilyMemberNode } from "./actions";
 import dagre from "@dagrejs/dagre";
@@ -247,6 +242,49 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     [initialData]
   );
 
+  const onDownload = useCallback(() => {
+    // 获取视口元素
+    const viewportElem = document.querySelector(
+      ".react-flow__viewport"
+    ) as HTMLElement;
+
+    if (!viewportElem) return;
+
+    // 计算所有节点的边界
+    const bounds = getNodesBounds(nodes);
+
+    // 设置导出图片的尺寸（包含一些内边距）
+    const imageWidth = bounds.width + 200;
+    const imageHeight = bounds.height + 200;
+
+    // 计算变换参数以适应所有节点
+    const transform = getViewportForBounds(
+      bounds,
+      imageWidth,
+      imageHeight,
+      0.1, // min zoom
+      2, // max zoom
+      0.1 // padding
+    );
+
+    toPng(viewportElem, {
+      backgroundColor: "#ffffff",
+      width: imageWidth,
+      height: imageHeight,
+      style: {
+        width: imageWidth.toString(),
+        height: imageHeight.toString(),
+        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.zoom})`,
+      },
+      pixelRatio: 2, // 2倍像素比，保证高清
+    }).then((dataUrl) => {
+      const a = document.createElement("a");
+      a.setAttribute("download", "family-tree.png");
+      a.setAttribute("href", dataUrl);
+      a.click();
+    });
+  }, [nodes]);
+
   return (
     <div
       ref={containerRef}
@@ -298,6 +336,12 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
           <Button size="sm" variant="outline" onClick={onResetView}>
             <RotateCcw className="h-4 w-4 mr-1" />
             重置视图
+          </Button>
+
+          {/* 导出图片按钮 */}
+          <Button size="sm" variant="outline" onClick={onDownload}>
+            <Download className="h-4 w-4 mr-1" />
+            保存图片
           </Button>
 
           {/* 全屏按钮 */}
