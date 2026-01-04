@@ -222,7 +222,6 @@ export async function updateFamilyMember(
       spouse: input.spouse,
       remarks: input.remarks,
       birthday: input.birthday,
-      death_date: input.death_date,
       residence_place: input.residence_place,
       updated_at: new Date().toISOString(),
     })
@@ -234,4 +233,82 @@ export async function updateFamilyMember(
 
   revalidatePath("/family-tree");
   return { success: true, error: null };
+}
+
+export interface ImportMemberInput {
+  name: string;
+  generation?: number | null;
+  sibling_order?: number | null;
+  father_name?: string | null; // 导入时使用姓名匹配
+  gender?: "男" | "女" | null;
+  official_position?: string | null;
+  is_alive?: boolean;
+  spouse?: string | null;
+  remarks?: string | null;
+  birthday?: string | null;
+  residence_place?: string | null;
+}
+
+export async function batchCreateFamilyMembers(
+  members: ImportMemberInput[]
+): Promise<{ success: boolean; count: number; error: string | null }> {
+  const supabase = await createClient();
+
+  // 1. 提取所有不为空的父亲姓名
+  const fatherNames = Array.from(
+    new Set(
+      members
+        .map((m) => m.father_name?.trim())
+        .filter((n): n is string => !!n)
+    )
+  );
+
+  // 2. 批量查找父亲 ID
+  const fatherMap: Record<string, number> = {};
+  if (fatherNames.length > 0) {
+    const { data: foundFathers } = await supabase
+      .from("family_members")
+      .select("id, name")
+      .in("name", fatherNames);
+
+    if (foundFathers) {
+      foundFathers.forEach((f) => {
+        // 注意：如果有重名，这里会覆盖，简单起见取最后一个。
+        // 实际场景可能需要更复杂的匹配逻辑（如结合世代）
+        fatherMap[f.name] = f.id;
+      });
+    }
+  }
+
+  // 3. 构建插入数据
+  const insertPayload = members.map((m) => {
+    let father_id: number | null = null;
+    if (m.father_name && fatherMap[m.father_name.trim()]) {
+      father_id = fatherMap[m.father_name.trim()];
+    }
+
+    return {
+      name: m.name,
+      generation: m.generation,
+      sibling_order: m.sibling_order,
+      father_id: father_id,
+      gender: m.gender,
+      official_position: m.official_position,
+      is_alive: m.is_alive ?? true,
+      spouse: m.spouse,
+      remarks: m.remarks,
+      birthday: m.birthday,
+      residence_place: m.residence_place,
+    };
+  });
+
+  // 4. 批量插入
+  const { error } = await supabase.from("family_members").insert(insertPayload);
+
+  if (error) {
+    return { success: false, count: 0, error: error.message };
+  }
+
+  revalidatePath("/family-tree");
+  return { success: true, count: members.length, error: null };
 }

@@ -38,6 +38,7 @@ import {
   fetchAllMembersForSelect,
   fetchMemberById,
 } from "./actions";
+import { ImportMembersDialog } from "./import-members-dialog";
 
 interface FamilyMembersTableProps {
   initialData: FamilyMember[];
@@ -267,6 +268,8 @@ export function FamilyMembersTable({
 
         {/* 操作按钮 */}
         <div className="flex gap-2">
+          <ImportMembersDialog onSuccess={() => router.refresh()} />
+          
           <Button onClick={handleOpenAddDialog}>
             <Plus className="h-4 w-4 mr-2" />
             新增

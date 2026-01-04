@@ -2,12 +2,12 @@
 
 ## 项目概述
 
-这是一个基于 **Next.js 15 (App Router)** + **Supabase** 的家族族谱管理应用，使用 TypeScript 开发。
+这是一个基于 **Next.js 16 (App Router)** + **Supabase** 的家族族谱管理应用，使用 TypeScript 开发。
 项目已进行**全面中文化**（zh-CN），包括 UI 文案、日期格式及元数据。
 
 ## 技术栈
 
-- **框架**: Next.js 15 (App Router, RSC)
+- **框架**: Next.js 16 (App Router, RSC)
 - **后端/数据库**: Supabase (PostgreSQL + Auth + Realtime)
 - **UI**: shadcn/ui (new-york 风格) + Tailwind CSS
 - **可视化**: @xyflow/react (React Flow) 用于族谱图
