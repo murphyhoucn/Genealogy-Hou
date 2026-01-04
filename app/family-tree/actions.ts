@@ -15,6 +15,8 @@ export interface FamilyMember {
   is_alive: boolean;
   spouse: string | null;
   remarks: string | null;
+  birthday: string | null;
+  residence_place: string | null;
   updated_at: string;
 }
 
@@ -88,6 +90,8 @@ export interface CreateMemberInput {
   is_alive?: boolean;
   spouse?: string | null;
   remarks?: string | null;
+  birthday?: string | null;
+  residence_place?: string | null;
 }
 
 export async function createFamilyMember(
@@ -105,6 +109,8 @@ export async function createFamilyMember(
     is_alive: input.is_alive ?? true,
     spouse: input.spouse,
     remarks: input.remarks,
+    birthday: input.birthday,
+    residence_place: input.residence_place,
   });
 
   if (error) {
@@ -212,6 +218,8 @@ export async function updateFamilyMember(
       is_alive: input.is_alive ?? true,
       spouse: input.spouse,
       remarks: input.remarks,
+      birthday: input.birthday,
+      residence_place: input.residence_place,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.id);

@@ -378,6 +378,21 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
                   <span className="text-muted-foreground">配偶</span>
                   <p className="font-medium">{selectedMember.spouse || "-"}</p>
                 </div>
+                <div className="space-y-1">
+                  <span className="text-muted-foreground">生日</span>
+                  <p className="font-medium">
+                    {selectedMember.birthday
+                      ? (() => {
+                          const [y, m, d] = selectedMember.birthday.split("-");
+                          return `${y}年${m}月${d}日`;
+                        })()
+                      : "-"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-muted-foreground">居住地</span>
+                  <p className="font-medium">{selectedMember.residence_place || "-"}</p>
+                </div>
                 {selectedMember.official_position && (
                   <div className="col-span-2 space-y-1">
                     <span className="text-muted-foreground">官职</span>

@@ -78,6 +78,8 @@ export function FamilyMembersTable({
     is_alive: true,
     spouse: "",
     remarks: "",
+    birthday: "",
+    residence_place: "",
   });
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -162,6 +164,8 @@ export function FamilyMembersTable({
       is_alive: true,
       spouse: "",
       remarks: "",
+      birthday: "",
+      residence_place: "",
     });
     setEditingMember(null);
   };
@@ -185,6 +189,8 @@ export function FamilyMembersTable({
       is_alive: member.is_alive,
       spouse: member.spouse ?? "",
       remarks: member.remarks ?? "",
+      birthday: member.birthday ?? "",
+      residence_place: member.residence_place ?? "",
     });
     setIsDialogOpen(true);
   };
@@ -217,6 +223,8 @@ export function FamilyMembersTable({
       is_alive: formData.is_alive,
       spouse: formData.spouse || null,
       remarks: formData.remarks || null,
+      birthday: formData.birthday || null,
+      residence_place: formData.residence_place || null,
     };
 
     const result = isEditMode && editingMember
@@ -383,6 +391,37 @@ export function FamilyMembersTable({
                 </Select>
               </div>
 
+              {/* 生日 */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="birthday" className="text-right">
+                  生日
+                </Label>
+                <Input
+                  id="birthday"
+                  type="date"
+                  value={formData.birthday}
+                  onChange={(e) =>
+                    setFormData({ ...formData, birthday: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+
+              {/* 居住地 */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="residence_place" className="text-right">
+                  居住地
+                </Label>
+                <Input
+                  id="residence_place"
+                  value={formData.residence_place}
+                  onChange={(e) =>
+                    setFormData({ ...formData, residence_place: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+
               {/* 官职 */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="official_position" className="text-right">
@@ -487,6 +526,8 @@ export function FamilyMembersTable({
               <TableHead className="w-20">排行</TableHead>
               <TableHead className="w-24">父亲</TableHead>
               <TableHead className="w-16">性别</TableHead>
+              <TableHead>生日</TableHead>
+              <TableHead>居住地</TableHead>
               <TableHead>官职</TableHead>
               <TableHead className="w-20">在世</TableHead>
               <TableHead>配偶</TableHead>
@@ -497,7 +538,7 @@ export function FamilyMembersTable({
           <TableBody>
             {initialData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="h-24 text-center">
+                <TableCell colSpan={14} className="h-24 text-center">
                   暂无数据
                 </TableCell>
               </TableRow>
@@ -547,6 +588,15 @@ export function FamilyMembersTable({
                     )}
                   </TableCell>
                   <TableCell>{member.gender ?? "-"}</TableCell>
+                  <TableCell>
+                    {member.birthday
+                      ? (() => {
+                          const [y, m, d] = member.birthday.split("-");
+                          return `${y}年${m}月${d}日`;
+                        })()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>{member.residence_place ?? "-"}</TableCell>
                   <TableCell>{member.official_position ?? "-"}</TableCell>
                   <TableCell>{member.is_alive ? "是" : "否"}</TableCell>
                   <TableCell>{member.spouse ?? "-"}</TableCell>
