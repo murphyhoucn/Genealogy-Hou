@@ -15,7 +15,7 @@ import {
   BackgroundVariant,
   type NodeTypes,
 } from "@xyflow/react";
-// @ts-expect-error - CSS module import
+// @ts-ignore
 import "@xyflow/react/dist/style.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

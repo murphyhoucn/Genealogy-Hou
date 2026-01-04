@@ -1,11 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { Suspense } from 'react'
 
-export default async function Page() {
+async function Notes() {
   const supabase = await createClient()
   const { data: notes } = await supabase.from('notes').select()
+  return <pre>{JSON.stringify(notes, null, 2)}</pre>
+}
 
-  return <Suspense>
-    <pre>{JSON.stringify(notes, null, 2)}</pre>
-  </Suspense>
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Notes />
+    </Suspense>
+  )
 }
