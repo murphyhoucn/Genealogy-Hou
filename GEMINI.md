@@ -9,6 +9,7 @@
 - **框架**: Next.js 15 (App Router, RSC)
 - **后端/数据库**: Supabase (PostgreSQL + Auth + Realtime)
 - **UI**: shadcn/ui (new-york 风格) + Tailwind CSS
+- **可视化**: @xyflow/react (React Flow) 用于族谱图
 - **主题**: next-themes 支持明暗模式
 
 ## 关键架构模式
@@ -44,6 +45,16 @@ const supabase = createClient();
 - 使用 `supabase.auth.getClaims()` 获取用户信息（比 `getUser()` 更快）
 - 登录成功后跳转到 `/protected`
 - 认证相关页面位于 `app/auth/` 目录
+
+## 核心功能模块
+
+### 族谱管理 (`app/family-tree/`)
+- **成员列表**: 分页展示家族成员，支持搜索。
+- **添加/编辑**: 包含成员基本信息、父母关系（`father_id`）、配偶等。
+
+### 族谱可视化 (`app/family-tree/graph/`)
+- 基于 `@xyflow/react` 实现。
+- 自动生成树形结构图，展示成员关系。
 
 ## 数据库 Schema
 

@@ -38,6 +38,13 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
+  // 首页重定向到族谱关系图
+  if (request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/family-tree/graph'
+    return NextResponse.redirect(url)
+  }
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
