@@ -65,7 +65,7 @@ function getLayoutedElements(
     rankdir: "TB", // 从上到下布局
     nodesep: HORIZONTAL_GAP, // 同层节点间距
     ranksep: VERTICAL_GAP, // 层间距
-    align: "UL", // 对齐方式
+    // align: "UL", // Removed this to enable center balancing
   });
 
   // 添加所有节点到 dagre 图
