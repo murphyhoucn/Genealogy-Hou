@@ -27,6 +27,7 @@ import {
   Search,
   X,
   Download,
+  ChevronsDown,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { FamilyMemberNodeType, type FamilyNodeData } from "./family-node";
@@ -52,13 +53,48 @@ const VERTICAL_GAP = 120;
 // 使用 dagre 进行自动布局，避免连线交叉
 function getLayoutedElements(
   members: FamilyMemberNode[],
-  highlightedId: number | null
+  childrenMap: Map<number, number[]>,
+  collapsedIds: Set<number>,
+  highlightedId: number | null,
+  onToggleCollapse?: (id: number) => void
 ): { nodes: Node[]; edges: Edge[] } {
   if (!members.length) {
     return { nodes: [], edges: [] };
   }
 
-  // 创建 dagre 图
+  // 1. 确定可见节点
+  const visibleMembers: FamilyMemberNode[] = [];
+  const memberMap = new Map(members.map((m) => [m.id, m]));
+
+  // 找到根节点（没有父亲，或父亲不在当前列表中）
+  const roots = members.filter(
+    (m) => !m.father_id || !memberMap.has(m.father_id)
+  );
+
+  // BFS 遍历
+  const queue = [...roots];
+  const visited = new Set<number>();
+
+  while (queue.length > 0) {
+    const member = queue.shift()!;
+    if (visited.has(member.id)) continue;
+    
+    visited.add(member.id);
+    visibleMembers.push(member);
+
+    // 如果未折叠，则添加子节点
+    if (!collapsedIds.has(member.id)) {
+      const childIds = childrenMap.get(member.id) || [];
+      childIds.forEach((childId) => {
+        const child = memberMap.get(childId);
+        if (child) {
+          queue.push(child);
+        }
+      });
+    }
+  }
+
+  // 2. 创建 dagre 图
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({
@@ -68,20 +104,20 @@ function getLayoutedElements(
     // align: "UL", // Removed this to enable center balancing
   });
 
-  // 添加所有节点到 dagre 图
-  members.forEach((member) => {
+  // 添加可见节点到 dagre 图
+  visibleMembers.forEach((member) => {
     dagreGraph.setNode(String(member.id), {
       width: NODE_WIDTH,
       height: NODE_HEIGHT,
     });
   });
 
-  // 添加所有边到 dagre 图
+  // 添加可见边到 dagre 图
   const edges: Edge[] = [];
-  members.forEach((member) => {
+  visibleMembers.forEach((member) => {
     if (member.father_id) {
-      // 确保父节点存在
-      const fatherExists = members.some((m) => m.id === member.father_id);
+      // 确保父节点也在可见列表中
+      const fatherExists = visibleMembers.some((m) => m.id === member.father_id);
       if (fatherExists) {
         dagreGraph.setEdge(String(member.father_id), String(member.id));
         edges.push({
@@ -100,11 +136,16 @@ function getLayoutedElements(
   dagre.layout(dagreGraph);
 
   // 转换为 React Flow 节点
-  const nodes: Node[] = members.map((member) => {
+  const nodes: Node[] = visibleMembers.map((member) => {
     const nodeWithPosition = dagreGraph.node(String(member.id));
+    const hasChildren = (childrenMap.get(member.id)?.length || 0) > 0;
+    
     const nodeData: FamilyNodeData = {
       ...member,
       isHighlighted: member.id === highlightedId,
+      hasChildren,
+      collapsed: collapsedIds.has(member.id),
+      onToggleCollapse,
     };
 
     return {
@@ -131,15 +172,57 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMemberNode | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  
+  // 折叠状态管理
+  const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
+
+  // 构建 childrenMap
+  const childrenMap = useMemo(() => {
+    const map = new Map<number, number[]>();
+    initialData.forEach(m => {
+      if (m.father_id) {
+        const children = map.get(m.father_id) || [];
+        children.push(m.id);
+        map.set(m.father_id, children);
+      }
+    });
+    return map;
+  }, [initialData]);
+
+  // 处理折叠切换
+  const onToggleCollapse = useCallback((id: number) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  // 展开所有
+  const onExpandAll = useCallback(() => {
+    setCollapsedIds(new Set());
+    setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+    }, 100);
+  }, [reactFlowInstance]);
 
   // 转换数据为节点和边（使用 dagre 自动布局）
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => getLayoutedElements(initialData, highlightedId),
-    [initialData, highlightedId]
+    () => getLayoutedElements(initialData, childrenMap, collapsedIds, highlightedId, onToggleCollapse),
+    [initialData, childrenMap, collapsedIds, highlightedId, onToggleCollapse]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+
+  // 当 initialNodes 变化（例如折叠状态改变），同步更新 nodes
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
 
   // 当高亮ID变化时更新节点
   useEffect(() => {
@@ -156,14 +239,14 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
   // 重置视图
   const onResetView = useCallback(() => {
-    // 重置节点位置
-    const { nodes: resetNodes, edges: resetEdges } = getLayoutedElements(initialData, highlightedId);
+    // 重置节点位置 (重新计算布局，保持折叠状态)
+    const { nodes: resetNodes } = getLayoutedElements(initialData, childrenMap, collapsedIds, highlightedId, onToggleCollapse);
     setNodes(resetNodes);
     // 重置视图位置，加一点延迟确保节点渲染完成
     setTimeout(() => {
       reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
     }, 10);
-  }, [reactFlowInstance, initialData, highlightedId, setNodes]);
+  }, [reactFlowInstance, initialData, childrenMap, collapsedIds, highlightedId, setNodes, onToggleCollapse]);
 
   // 搜索功能
   const onSearch = useCallback(() => {
@@ -177,19 +260,57 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     );
 
     if (found) {
-      setHighlightedId(found.id);
-      // 聚焦到找到的节点
-      const node = nodes.find((n) => n.id === String(found.id));
-      if (node) {
-        reactFlowInstance.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
-          zoom: 1.5,
-          duration: 500,
-        });
+      // 如果找到的节点被折叠了（它的祖先被折叠），需要展开
+      // 简单处理：如果搜索，我们可以清除折叠，或者找到路径并展开
+      // 这里暂时只做定位，如果不可见，用户可能看不到
+      // 改进：找到节点后，检查其祖先是否在 collapsedIds 中，如果有，移除
+      
+      let current = found;
+      const idsToExpand = new Set<number>();
+      while(current.father_id) {
+         if (collapsedIds.has(current.father_id)) {
+            idsToExpand.add(current.father_id);
+         }
+         const father = initialData.find(m => m.id === current.father_id);
+         if (!father) break;
+         current = father;
+      }
+
+      if (idsToExpand.size > 0) {
+          setCollapsedIds(prev => {
+              const next = new Set(prev);
+              idsToExpand.forEach(id => next.delete(id));
+              return next;
+          });
+          // 稍微延迟一下等待重新布局
+          setTimeout(() => {
+            setHighlightedId(found.id);
+            // 这里无法直接获取新节点位置，因为 setNodes 是异步的
+            // 可以依赖 useEffect [highlightedId] 触发后的逻辑，或者再加个 effect 监听 search 目标
+          }, 100);
+      } else {
+        setHighlightedId(found.id);
       }
     } else {
       setHighlightedId(null);
     }
-  }, [searchQuery, initialData, nodes, reactFlowInstance]);
+  }, [searchQuery, initialData, collapsedIds]);
+  
+  // 监听 highlight 变化后聚焦
+  useEffect(() => {
+      if (highlightedId) {
+          // 稍微延迟等待布局更新
+          setTimeout(() => {
+            const node = reactFlowInstance.getNode(String(highlightedId));
+            if (node) {
+                reactFlowInstance.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
+                zoom: 1.5,
+                duration: 500,
+                });
+            }
+          }, 200);
+      }
+  }, [highlightedId, reactFlowInstance, nodes]); // nodes 变化时也尝试聚焦
 
   // 清除搜索
   const onClearSearch = useCallback(() => {
@@ -342,6 +463,11 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
           {/* 右侧：操作按钮组 */}
           <div className="pointer-events-auto flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={onExpandAll} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+              <ChevronsDown className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">全部展开</span>
+            </Button>
+
             <Button size="sm" variant="outline" onClick={onResetView} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
               <RotateCcw className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">重置视图</span>
