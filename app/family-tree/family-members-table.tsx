@@ -39,6 +39,7 @@ import {
   fetchMemberById,
 } from "./actions";
 import { ImportMembersDialog } from "./import-members-dialog";
+import { FatherCombobox } from "./father-combobox";
 
 interface FamilyMembersTableProps {
   initialData: FamilyMember[];
@@ -186,7 +187,7 @@ export function FamilyMembersTable({
       name: member.name,
       generation: member.generation?.toString() ?? "",
       sibling_order: member.sibling_order?.toString() ?? "",
-      father_id: member.father_id?.toString() ?? "",
+      father_id: member.father_id?.toString() ?? "null",
       gender: member.gender ?? "",
       official_position: member.official_position ?? "",
       is_alive: member.is_alive,
@@ -221,7 +222,9 @@ export function FamilyMembersTable({
       sibling_order: formData.sibling_order
         ? parseInt(formData.sibling_order)
         : null,
-      father_id: formData.father_id ? parseInt(formData.father_id) : null,
+      father_id: (formData.father_id && formData.father_id !== "null") 
+        ? parseInt(formData.father_id) 
+        : null,
       gender: (formData.gender as "男" | "女") || null,
       official_position: formData.official_position || null,
       is_alive: formData.is_alive,
@@ -313,6 +316,30 @@ export function FamilyMembersTable({
                 />
               </div>
 
+              {/* 父亲 */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="father_id" className="text-right">
+                  父亲
+                </Label>
+                <div className="col-span-3">
+                  <FatherCombobox
+                    value={formData.father_id}
+                    options={parentOptions}
+                    onChange={(value) => {
+                      const father = parentOptions.find(p => p.id.toString() === value);
+                      const newGeneration = father && father.generation !== null 
+                        ? (father.generation + 1).toString() 
+                        : (value === "null" ? "" : formData.generation);
+                      setFormData({ 
+                        ...formData, 
+                        father_id: value, 
+                        generation: newGeneration 
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+
               {/* 世代 */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="generation" className="text-right">
@@ -326,6 +353,7 @@ export function FamilyMembersTable({
                     setFormData({ ...formData, generation: e.target.value })
                   }
                   className="col-span-3"
+                  disabled={!!formData.father_id && formData.father_id !== "null"}
                 />
               </div>
 
@@ -346,35 +374,6 @@ export function FamilyMembersTable({
                   }
                   className="col-span-3"
                 />
-              </div>
-
-              {/* 父亲 */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="father_id" className="text-right">
-                  父亲
-                </Label>
-                <Select
-                  value={formData.father_id}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, father_id: value })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="选择父亲" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {parentOptions.map((member) => (
-                      <SelectItem
-                        key={member.id}
-                        value={member.id.toString()}
-                      >
-                        {member.name}
-                        {member.generation !== null &&
-                          ` (第${member.generation}世)`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* 性别 */}
