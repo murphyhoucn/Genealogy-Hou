@@ -10,7 +10,10 @@
 - **框架**: Next.js 15 (App Router, RSC)
 - **后端/数据库**: Supabase (PostgreSQL + Auth + Realtime)
 - **UI**: shadcn/ui (new-york 风格) + Tailwind CSS
-- **可视化**: @xyflow/react (React Flow) 用于族谱图
+- **可视化**: 
+    - `@xyflow/react` (React Flow) 用于 2D 族谱图
+    - `react-force-graph-3d` 用于 3D 族谱图
+    - `recharts` 用于统计仪表盘
 - **主题**: next-themes 支持明暗模式
 
 ## 关键架构模式
@@ -75,6 +78,15 @@ revalidatePath("/family-tree", "layout");
 - **移动端优化**: 页面头部标题与切换按钮在移动端垂直堆叠显示。
 - 使用 `three-spritetext` 渲染清晰的文字标签。
 - 详情弹窗复用 `MemberDetailDialog`。
+
+### 统计与分析 (`app/family-tree/statistics/`)
+- 基于 `recharts` 实现的家族数据仪表盘。
+- **可视化统计**:
+    - **数据概览**: 总人数、男性比例、在世人数、世代总数。
+    - **性别/状态比例**: 饼图展示家族成员性别分布及在世与已故比例。
+    - **世代分布**: 柱状图展示每一世代的成员增长趋势。
+    - **年龄分布**: 柱状图展示在世成员的年龄段分布（基于生日数据）。
+    - **字辈趋势**: 自动统计姓名中第二个字（通常为字辈）的出现频率。
 
 ## 响应式与移动端规范
 
