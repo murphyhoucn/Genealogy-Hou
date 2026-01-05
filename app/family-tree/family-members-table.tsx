@@ -255,9 +255,9 @@ export function FamilyMembersTable({
   return (
     <div className="space-y-4">
       {/* 工具栏 */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+      <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
         {/* 搜索 */}
-        <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-auto">
+        <form onSubmit={handleSearch} className="flex gap-2 w-full lg:w-auto">
           <Input
             placeholder="搜索姓名..."
             value={searchInput}
@@ -270,7 +270,7 @@ export function FamilyMembersTable({
         </form>
 
         {/* 操作按钮 */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap w-full lg:w-auto">
           <ImportMembersDialog onSuccess={() => router.refresh()} />
           
           <Button onClick={handleOpenAddDialog}>
@@ -647,7 +647,7 @@ export function FamilyMembersTable({
       </div>
 
       {/* 分页 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
         <p className="text-sm text-muted-foreground">
           共 {totalCount} 条记录，第 {currentPage} / {totalPages || 1} 页
         </p>

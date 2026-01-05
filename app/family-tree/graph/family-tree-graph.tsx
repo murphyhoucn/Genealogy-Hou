@@ -316,16 +316,19 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         />
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
 
-        {/* 顶部工具栏 */}
-        <Panel position="top-left" className="flex items-center gap-2 flex-wrap">
-          {/* 搜索框 */}
-          <div className="flex items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-md p-1">
+        {/* 顶部统一工具栏：左侧搜索，右侧按钮 */}
+        <Panel 
+          position="top-left" 
+          className="!absolute !top-0 !left-0 !w-full !m-0 p-2 sm:p-4 flex justify-between items-start pointer-events-none z-10"
+        >
+          {/* 左侧：搜索框 */}
+          <div className="pointer-events-auto flex items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-md p-1 shadow-sm">
             <Input
-              placeholder="搜索成员姓名..."
+              placeholder="搜索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onSearch()}
-              className="h-8 w-40 md:w-56 border-0 focus-visible:ring-0"
+              className="h-8 w-28 sm:w-40 md:w-56 border-0 focus-visible:ring-0 placeholder:text-muted-foreground/70"
             />
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onSearch}>
               <Search className="h-4 w-4" />
@@ -336,35 +339,33 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
               </Button>
             )}
           </div>
-        </Panel>
 
-        <Panel position="top-right" className="flex items-center gap-2">
-          {/* 重置视图按钮 */}
-          <Button size="sm" variant="outline" onClick={onResetView}>
-            <RotateCcw className="h-4 w-4 mr-1" />
-            重置视图
-          </Button>
+          {/* 右侧：操作按钮组 */}
+          <div className="pointer-events-auto flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={onResetView} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+              <RotateCcw className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">重置视图</span>
+            </Button>
 
-          {/* 导出图片按钮 */}
-          <Button size="sm" variant="outline" onClick={onDownload}>
-            <Download className="h-4 w-4 mr-1" />
-            保存图片
-          </Button>
+            <Button size="sm" variant="outline" onClick={onDownload} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+              <Download className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">保存图片</span>
+            </Button>
 
-          {/* 全屏按钮 */}
-          <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-            {isFullscreen ? (
-              <>
-                <Minimize className="h-4 w-4 mr-1" />
-                退出全屏
-              </>
-            ) : (
-              <>
-                <Maximize className="h-4 w-4 mr-1" />
-                全屏
-              </>
-            )}
-          </Button>
+            <Button size="sm" variant="outline" onClick={toggleFullscreen} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+              {isFullscreen ? (
+                <>
+                  <Minimize className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">退出全屏</span>
+                </>
+              ) : (
+                <>
+                  <Maximize className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">全屏</span>
+                </>
+              )}
+            </Button>
+          </div>
         </Panel>
 
         {/* 统计信息 */}

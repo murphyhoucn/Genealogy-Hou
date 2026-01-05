@@ -3,7 +3,7 @@ import { SupabaseLogo } from "./supabase-logo";
 
 export function Hero() {
   return (
-    <div className="flex flex-col gap-16 items-center">
+    <div className="flex flex-col gap-8 lg:gap-16 items-center px-4">
       <div className="flex gap-8 justify-center items-center">
         <a
           href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
@@ -18,10 +18,10 @@ export function Hero() {
         </a>
       </div>
       <h1 className="sr-only">刘氏族谱管理系统</h1>
-      <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
+      <p className="text-2xl sm:text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
         刘氏族谱管理系统
       </p>
-      <p className="text-xl text-muted-foreground text-center max-w-lg">
+      <p className="text-lg sm:text-xl text-muted-foreground text-center max-w-lg">
         数字化传承家族历史，可视化展示家族脉络
       </p>
       <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-8" />
