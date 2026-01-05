@@ -156,8 +156,14 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
   // 重置视图
   const onResetView = useCallback(() => {
-    reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
-  }, [reactFlowInstance]);
+    // 重置节点位置
+    const { nodes: resetNodes, edges: resetEdges } = getLayoutedElements(initialData, highlightedId);
+    setNodes(resetNodes);
+    // 重置视图位置，加一点延迟确保节点渲染完成
+    setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+    }, 10);
+  }, [reactFlowInstance, initialData, highlightedId, setNodes]);
 
   // 搜索功能
   const onSearch = useCallback(() => {
