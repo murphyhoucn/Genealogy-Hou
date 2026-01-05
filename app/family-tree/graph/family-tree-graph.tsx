@@ -308,6 +308,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         minZoom={0.1}
         maxZoom={2}
         attributionPosition="bottom-left"
+        proOptions={{ hideAttribution: true }}
       >
         <Controls 
           showInteractive={false} 
