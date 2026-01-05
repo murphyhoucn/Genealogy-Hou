@@ -120,7 +120,7 @@ export async function createFamilyMember(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/family-tree");
+  revalidatePath("/family-tree", "layout");
   return { success: true, error: null };
 }
 
@@ -142,7 +142,7 @@ export async function deleteFamilyMembers(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/family-tree");
+  revalidatePath("/family-tree", "layout");
   return { success: true, error: null };
 }
 
@@ -232,7 +232,7 @@ export async function updateFamilyMember(
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/family-tree");
+  revalidatePath("/family-tree", "layout");
   return { success: true, error: null };
 }
 
@@ -310,7 +310,7 @@ export async function batchCreateFamilyMembers(
     return { success: false, count: 0, error: error.message };
   }
 
-  revalidatePath("/family-tree");
+  revalidatePath("/family-tree", "layout");
   return { success: true, count: members.length, error: null };
 }
 
