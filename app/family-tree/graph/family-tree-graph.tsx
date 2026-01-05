@@ -30,7 +30,14 @@ import {
   ChevronsDown,
   Lock,
   Unlock,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toPng } from "html-to-image";
 import { FamilyMemberNodeType, type FamilyNodeData } from "./family-node";
 import { FlowingEdge } from "./flowing-edge";
@@ -482,36 +489,24 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
           {/* 右侧：操作按钮组 */}
           <div className="pointer-events-auto flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={onExpandAll} title="展开所有折叠的家族成员" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
-              <ChevronsDown className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">全部展开</span>
-            </Button>
-
-            <Button size="sm" variant="outline" onClick={onResetView} title="将视图重置到中心位置并恢复缩放" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={onResetView} 
+              title="将视图重置到中心位置并恢复缩放" 
+              className="bg-background/95 backdrop-blur-sm shadow-sm h-9 w-9 px-0 sm:w-auto sm:px-4"
+            >
               <RotateCcw className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">重置视图</span>
+              <span className="hidden sm:inline">重置</span>
             </Button>
 
-            <Button size="sm" variant="outline" onClick={toggleDraggable} title={isDraggable ? "点击锁定节点位置，防止误拖拽" : "点击解锁节点位置，允许手动调整布局"} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
-              {isDraggable ? (
-                <>
-                  <Unlock className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">解锁位置</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">锁定位置</span>
-                </>
-              )}
-            </Button>
-
-            <Button size="sm" variant="outline" onClick={onDownload} title="将当前族谱导出为 PNG 图片" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
-              <Download className="h-4 w-4 sm:mr-1" />
-              <span className="hidden sm:inline">保存图片</span>
-            </Button>
-
-            <Button size="sm" variant="outline" onClick={toggleFullscreen} title={isFullscreen ? "退出全屏模式" : "进入全屏模式"} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={toggleFullscreen} 
+              title={isFullscreen ? "退出全屏模式" : "进入全屏模式"} 
+              className="bg-background/95 backdrop-blur-sm shadow-sm h-9 w-9 px-0 sm:w-auto sm:px-4"
+            >
               {isFullscreen ? (
                 <>
                   <Minimize className="h-4 w-4 sm:mr-1" />
@@ -524,6 +519,42 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
                 </>
               )}
             </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-background/95 backdrop-blur-sm shadow-sm h-9 w-9 px-0"
+                  title="更多操作"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onExpandAll}>
+                  <ChevronsDown className="h-4 w-4 mr-2" />
+                  全部展开
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleDraggable}>
+                  {isDraggable ? (
+                    <>
+                      <Unlock className="h-4 w-4 mr-2" />
+                      解锁位置
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      锁定位置
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDownload}>
+                  <Download className="h-4 w-4 mr-2" />
+                  保存图片
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </Panel>
 
