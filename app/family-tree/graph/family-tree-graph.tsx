@@ -28,6 +28,8 @@ import {
   X,
   Download,
   ChevronsDown,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { FamilyMemberNodeType, type FamilyNodeData } from "./family-node";
@@ -172,6 +174,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMemberNode | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDraggable, setIsDraggable] = useState(false);
   
   // 折叠状态管理
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
@@ -417,6 +420,10 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     });
   }, [nodes]);
 
+  const toggleDraggable = useCallback(() => {
+    setIsDraggable((prev) => !prev);
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -435,6 +442,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         maxZoom={2}
         attributionPosition="bottom-left"
         proOptions={{ hideAttribution: true }}
+        nodesDraggable={isDraggable}
       >
         <Controls 
           showInteractive={false} 
@@ -456,11 +464,11 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
               onKeyDown={(e) => e.key === "Enter" && onSearch()}
               className="h-8 w-28 sm:w-40 md:w-56 border-0 focus-visible:ring-0 placeholder:text-muted-foreground/70"
             />
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onSearch}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onSearch} title="搜索成员">
               <Search className="h-4 w-4" />
             </Button>
             {searchQuery && (
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClearSearch}>
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClearSearch} title="清除搜索内容">
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -468,22 +476,36 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
           {/* 右侧：操作按钮组 */}
           <div className="pointer-events-auto flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={onExpandAll} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button size="sm" variant="outline" onClick={onExpandAll} title="展开所有折叠的家族成员" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
               <ChevronsDown className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">全部展开</span>
             </Button>
 
-            <Button size="sm" variant="outline" onClick={onResetView} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button size="sm" variant="outline" onClick={onResetView} title="将视图重置到中心位置并恢复缩放" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
               <RotateCcw className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">重置视图</span>
             </Button>
 
-            <Button size="sm" variant="outline" onClick={onDownload} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button size="sm" variant="outline" onClick={toggleDraggable} title={isDraggable ? "点击锁定节点位置，防止误拖拽" : "点击解锁节点位置，允许手动调整布局"} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+              {isDraggable ? (
+                <>
+                  <Unlock className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">解锁位置</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">锁定位置</span>
+                </>
+              )}
+            </Button>
+
+            <Button size="sm" variant="outline" onClick={onDownload} title="将当前族谱导出为 PNG 图片" className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
               <Download className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">保存图片</span>
             </Button>
 
-            <Button size="sm" variant="outline" onClick={toggleFullscreen} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
+            <Button size="sm" variant="outline" onClick={toggleFullscreen} title={isFullscreen ? "退出全屏模式" : "进入全屏模式"} className="bg-background/95 backdrop-blur-sm shadow-sm h-9 px-2.5 sm:px-4">
               {isFullscreen ? (
                 <>
                   <Minimize className="h-4 w-4 sm:mr-1" />
