@@ -31,6 +31,9 @@ export default function FamilyTreeLayout({
              <Link href="/family-tree/timeline" className="hover:text-primary transition-colors">
               时间轴
             </Link>
+            <Link href="/family-tree/statistics" className="hover:text-primary transition-colors">
+              统计分析
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4">

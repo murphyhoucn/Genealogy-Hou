@@ -41,6 +41,11 @@ export function MobileNav({ children }: { children: React.ReactNode }) {
             时间轴
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/family-tree/statistics" className="w-full cursor-pointer">
+            统计分析
+          </Link>
+        </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
