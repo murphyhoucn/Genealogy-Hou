@@ -2,12 +2,12 @@
 
 ## 项目概述
 
-这是一个基于 **Next.js 16 (App Router)** + **Supabase** 的家族族谱管理应用，使用 TypeScript 开发。
+这是一个基于 **Next.js 15 (App Router)** + **Supabase** 的家族族谱管理应用，使用 TypeScript 开发。
 项目已进行**全面中文化**（zh-CN），包括 UI 文案、日期格式及元数据。
 
 ## 技术栈
 
-- **框架**: Next.js 16 (App Router, RSC)
+- **框架**: Next.js 15 (App Router, RSC)
 - **后端/数据库**: Supabase (PostgreSQL + Auth + Realtime)
 - **UI**: shadcn/ui (new-york 风格) + Tailwind CSS
 - **可视化**: @xyflow/react (React Flow) 用于族谱图
@@ -47,23 +47,46 @@ const supabase = createClient();
 - 登录成功后跳转到 `/`
 - 认证相关页面位于 `app/auth/` 目录
 
+### 数据缓存与刷新
+
+为确保族谱数据在不同视图（列表、2D图、3D图、时间轴）之间保持同步，在 `app/family-tree/actions.ts` 中的所有数据变更操作（创建、更新、删除、批量导入）必须触发路径重验证：
+
+```typescript
+// 必须使用 "layout" 类型以失效整个路由段的缓存
+revalidatePath("/family-tree", "layout");
+```
+
 ## 核心功能模块
 
 ### 族谱管理 (`app/family-tree/`)
-- **成员列表**: 分页展示家族成员，支持搜索。
+- **成员列表**: 分页展示家族成员，支持搜索。已针对移动端优化，工具栏支持自动换行，表格支持横向滚动。
 - **添加/编辑**: 包含成员基本信息、父母关系（`father_id`）、配偶、生日（`birthday`）、居住地（`residence_place`）等。
 - **通用组件**: `MemberDetailDialog` 用于在 2D/3D 视图中统一展示成员详情。
 
 ### 族谱可视化 (`app/family-tree/graph/`)
 - 基于 `@xyflow/react` 实现。
 - 自动生成树形结构图，展示成员关系。
+- **移动端优化**: 采用全宽透明工具栏，搜索框居左，操作按钮居右。在窄屏下按钮自动隐藏文字仅保留图标，防止 UI 重叠。
 - 详情弹窗复用 `MemberDetailDialog`。
 
 ### 3D 族谱可视化 (`app/family-tree/graph-3d/`)
 - 基于 `react-force-graph-3d` 实现。
 - 提供三维视角的力导向图，支持全屏、搜索定位、节点点击详情等功能。
+- **移动端优化**: 页面头部标题与切换按钮在移动端垂直堆叠显示。
 - 使用 `three-spritetext` 渲染清晰的文字标签。
 - 详情弹窗复用 `MemberDetailDialog`。
+
+## 响应式与移动端规范
+
+### 导航栏 (`components/mobile-nav.tsx`)
+- 移动端使用 `MobileNav`（下拉菜单）替代桌面端水平导航。
+- `AuthButton` 在移动端会自动调整为垂直布局，并对过长的邮箱地址进行截断处理。
+
+### 布局工具类使用
+- 优先使用 Tailwind 的响应式前缀（如 `md:flex`, `lg:row`）。
+- 按钮组在移动端应使用 `flex-wrap` 以防溢出。
+- 对于复杂的工具栏（如 Graph 页面），使用 `pointer-events-none` 配合内部元素的 `pointer-events-auto`，确保 UI 控件不会阻碍底层画布的交互。
+- 移动端按钮应尽量移除文字说明 (`hidden sm:inline`) 仅保留图标，以节省空间。
 
 ## 数据库 Schema
 
