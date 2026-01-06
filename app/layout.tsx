@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Noto_Serif_SC } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -20,6 +20,13 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+const notoSerifSC = Noto_Serif_SC({
+  variable: "--font-noto-serif-sc",
+  weight: ["200", "300", "400", "500", "600", "700", "900"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.variable} ${notoSerifSC.variable} font-serif antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

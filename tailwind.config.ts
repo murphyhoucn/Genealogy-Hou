@@ -57,6 +57,10 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["var(--font-noto-serif-sc)", "ui-serif", "Georgia", "Cambria", "Times New Roman", "Times", "serif"],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
