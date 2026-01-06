@@ -29,7 +29,7 @@ COMMENT ON COLUMN family_members.gender IS '性别';
 COMMENT ON COLUMN family_members.official_position IS '官职';
 COMMENT ON COLUMN family_members.is_alive IS '是否在世';
 COMMENT ON COLUMN family_members.spouse IS '配偶姓名';
-COMMENT ON COLUMN family_members.remarks IS '备注';
+COMMENT ON COLUMN family_members.remarks IS '生平事迹';
 COMMENT ON COLUMN family_members.updated_at IS '最后更新时间';
 COMMENT ON COLUMN family_members.birthday IS '出生日期';
 COMMENT ON COLUMN family_members.death_date IS '去世日期';
