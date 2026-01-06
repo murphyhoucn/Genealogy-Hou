@@ -50,6 +50,9 @@ const supabase = createClient();
 - 使用 `supabase.auth.getClaims()` 获取用户信息（比 `getUser()` 更快）
 - 登录成功后跳转到 `/`
 - 认证相关页面位于 `app/auth/` 目录
+- **登录体验优化**: 
+    - 采用水墨山水背景（`login-bg.png`）及毛玻璃效果，增强家族文化氛围。
+    - 登录按钮集成 `Loader2` 加载动画，提供明确的交互反馈。
 
 ### 数据缓存与刷新
 
@@ -79,15 +82,22 @@ revalidatePath("/family-tree", "layout");
 ### 族谱可视化 (`app/family-tree/graph/`)
 - 基于 `@xyflow/react` 实现。
 - 自动生成树形结构图，展示成员关系。
+- **节点视觉优化**:
+    - **状态区分**: 显著区分“在世”与“已故”节点。已故节点采用 `bg-muted/50` 背景、脱色边框及 dimmed 文字，视觉上更暗淡，突出活跃成员。
+    - **可读性**: 已故节点的名字使用 `text-foreground/80`，在保持暗淡感的同时确保信息清晰易读。
 - **移动端优化**: 采用全宽透明工具栏，搜索框居左，操作按钮居右。在窄屏下按钮自动隐藏文字仅保留图标，防止 UI 重叠。
 - 详情弹窗复用 `MemberDetailDialog`。
 
 ### 3D 族谱可视化 (`app/family-tree/graph-3d/`)
 - 基于 `react-force-graph-3d` 实现。
 - 提供三维视角的力导向图，支持全屏、搜索定位、节点点击详情等功能。
+- **自动巡游 (Auto Tour)**:
+    - **路径规划**: 基于 BFS 算法自动计算任意两名族人之间的最短关系路径。
+    - **沉浸式体验**: 自动移动相机跟随路径巡游，支持暂停、继续及进度追踪。
+    - **UI 交互**: 提供专用的巡游配置弹窗与悬浮控制台。
 - **移动端优化**: 页面头部标题与切换按钮在移动端垂直堆叠显示。
 - 使用 `three-spritetext` 渲染清晰的文字标签。
-- 详情弹窗复用 `MemberDetailDialog`。
+- 详情弹窗复用 `MemberDetailDialog`.
 
 ### 统计与分析 (`app/family-tree/statistics/`)
 - 基于 `recharts` 实现的家族数据仪表盘。
