@@ -20,10 +20,13 @@ import {
   Minimize,
   User,
   X,
+  Map,
 } from "lucide-react";
 import SpriteText from "three-spritetext";
 import { useTheme } from "next-themes";
 import { MemberDetailDialog } from "../member-detail-dialog";
+import { TourDialog } from "./tour-dialog";
+import { TourControls } from "./tour-controls";
 
 // 动态导入 ForceGraph3D，禁用 SSR
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
@@ -67,6 +70,14 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+  // Tour State
+  const [isTourDialogOpen, setIsTourDialogOpen] = useState(false);
+  const [tourPath, setTourPath] = useState<FamilyMemberNode[]>([]);
+  const [currentTourStep, setCurrentTourStep] = useState(0);
+  const [isTourActive, setIsTourActive] = useState(false);
+  const [isTourPaused, setIsTourPaused] = useState(false);
+  const tourTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // 监听容器大小变化
   useEffect(() => {
     const updateDimensions = () => {
@@ -108,6 +119,86 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
 
     return { nodes, links };
   }, [data]);
+
+  // Tour Logic
+  const startTour = (path: FamilyMemberNode[]) => {
+    setTourPath(path);
+    setCurrentTourStep(0);
+    setIsTourActive(true);
+    setIsTourPaused(false);
+    // Close detail dialog if open
+    setIsDetailOpen(false);
+  };
+
+  const stopTour = () => {
+    setIsTourActive(false);
+    setIsTourPaused(false);
+    setTourPath([]);
+    setCurrentTourStep(0);
+    setHighlightedId(null);
+    if (tourTimeoutRef.current) {
+      clearTimeout(tourTimeoutRef.current);
+    }
+  };
+
+  const pauseTour = () => {
+    setIsTourPaused(true);
+    if (tourTimeoutRef.current) {
+      clearTimeout(tourTimeoutRef.current);
+    }
+  };
+
+  const resumeTour = () => {
+    setIsTourPaused(false);
+  };
+
+  // Effect to handle tour progression
+  useEffect(() => {
+    if (!isTourActive || isTourPaused || !fgRef.current) return;
+
+    if (currentTourStep >= tourPath.length) {
+      stopTour();
+      return;
+    }
+
+    const targetMember = tourPath[currentTourStep];
+    // Find the node in the internal graph data to get current coordinates
+    // Note: react-force-graph modifies the objects in graphData.nodes with x,y,z
+    const node = graphData.nodes.find(n => n.id === targetMember.id);
+
+    if (node && node.x !== undefined && node.y !== undefined && node.z !== undefined) {
+      setHighlightedId(node.id);
+
+      // Calculate distance for camera
+      const distance = 80;
+      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+      fgRef.current.cameraPosition(
+        { 
+          x: node.x * distRatio, 
+          y: node.y * distRatio, 
+          z: node.z * distRatio 
+        },
+        { x: node.x, y: node.y, z: node.z },
+        2000 // Transition time (2s)
+      );
+
+      // Wait for transition + dwell time
+      tourTimeoutRef.current = setTimeout(() => {
+        setCurrentTourStep(prev => prev + 1);
+      }, 3500); // 2000ms move + 1500ms dwell
+    } else {
+      // If node not found or coords missing, skip to next
+      setCurrentTourStep(prev => prev + 1);
+    }
+
+    return () => {
+      if (tourTimeoutRef.current) {
+        clearTimeout(tourTimeoutRef.current);
+      }
+    };
+  }, [isTourActive, isTourPaused, currentTourStep, tourPath, graphData.nodes]);
+
 
   // 搜索功能
   const handleSearch = useCallback(() => {
@@ -223,6 +314,15 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
         <Button size="icon" variant="secondary" onClick={toggleFullscreen} title={isFullscreen ? "退出全屏" : "全屏"}>
           {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
         </Button>
+        <Button 
+          size="icon" 
+          variant={isTourActive ? "default" : "secondary"} 
+          onClick={() => setIsTourDialogOpen(true)} 
+          title="自动巡游"
+          className={isTourActive ? "animate-pulse" : ""}
+        >
+          <Map className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* 3D 图表 */}
@@ -257,6 +357,7 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
         
         // 点击事件
         onNodeClick={(node: any) => {
+          if (isTourActive) return; // Disable manual click during tour
           setSelectedMember(node);
           setIsDetailOpen(true);
           
@@ -270,6 +371,27 @@ export function FamilyForceGraph({ data }: ForceGraphProps) {
           );
         }}
       />
+      )}
+
+      {/* Tour UI Components */}
+      <TourDialog
+        isOpen={isTourDialogOpen}
+        onOpenChange={setIsTourDialogOpen}
+        members={data}
+        onStartTour={startTour}
+      />
+
+      {isTourActive && (
+        <TourControls
+          currentStep={currentTourStep}
+          totalSteps={tourPath.length}
+          currentMember={tourPath[currentTourStep]}
+          nextMember={tourPath[currentTourStep + 1] || null}
+          isPaused={isTourPaused}
+          onPause={pauseTour}
+          onResume={resumeTour}
+          onStop={stopTour}
+        />
       )}
 
       <MemberDetailDialog
