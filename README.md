@@ -1,7 +1,7 @@
 # pure-genealogy 族谱管理系统
 
 <p align="center">
-  <img alt="pure-genealogy Tree" src="app/opengraph-image.png" width="800">
+  <img alt="pure-genealogy Tree" src="app/demo.gif" width="800">
 </p>
 
 <p align="center">
