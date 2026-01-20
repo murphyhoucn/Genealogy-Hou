@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useRef, useEffect, type MouseEvent } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect, memo, type MouseEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   ReactFlow,
@@ -63,6 +63,11 @@ interface FamilyTreeGraphProps {
   initialData: FamilyMemberNode[];
 }
 
+interface FamilyTreeGraphInnerProps {
+  initialData: FamilyMemberNode[];
+  onMemberClick?: (member: FamilyMemberNode) => void;
+}
+
 // 布局常量
 const NODE_WIDTH = 160;
 const NODE_HEIGHT = 120; // 增加高度以容纳配偶信息
@@ -89,7 +94,7 @@ function getLayoutedElements(
   const roots = members.filter(
     (m) => !m.father_id || !memberMap.has(m.father_id)
   );
-  
+
   // 获取根节点的代数，用于计算相对代数偏移量
   const rootGeneration = roots.length > 0 ? (roots[0].generation || 1) : 1;
 
@@ -97,15 +102,15 @@ function getLayoutedElements(
   // 逻辑：找到根节点的直接子节点（各大房头），分配颜色，并传递给后代
   // 存储的是 HSL 对象，方便后续计算梯度
   const memberBaseColorMap = new Map<number, HSLColor>();
-  
+
   // 辅助函数：递归设置颜色
   const setDescendantColors = (memberId: number, color: HSLColor) => {
     memberBaseColorMap.set(memberId, color);
     const children = childrenMap.get(memberId) || [];
     children.forEach(childId => {
-        if (!memberBaseColorMap.has(childId)) {
-            setDescendantColors(childId, color);
-        }
+      if (!memberBaseColorMap.has(childId)) {
+        setDescendantColors(childId, color);
+      }
     });
   };
 
@@ -113,8 +118,8 @@ function getLayoutedElements(
   roots.forEach(root => {
     const children = childrenMap.get(root.id) || [];
     children.forEach((childId, index) => {
-       const baseColor = getBranchBaseColor(index);
-       setDescendantColors(childId, baseColor);
+      const baseColor = getBranchBaseColor(index);
+      setDescendantColors(childId, baseColor);
     });
   });
 
@@ -125,7 +130,7 @@ function getLayoutedElements(
   while (queue.length > 0) {
     const member = queue.shift()!;
     if (visited.has(member.id)) continue;
-    
+
     visited.add(member.id);
     visibleMembers.push(member);
 
@@ -167,10 +172,10 @@ function getLayoutedElements(
       const fatherExists = visibleMembers.some((m) => m.id === member.father_id);
       if (fatherExists) {
         dagreGraph.setEdge(String(member.father_id), String(member.id));
-        
+
         // 获取连线颜色：使用支系的【基准色】（最深色），作为树干颜色
         const baseColor = memberBaseColorMap.get(member.id);
-        const edgeColor = baseColor 
+        const edgeColor = baseColor
           ? generateBranchColor(baseColor, 0) // 始终使用第0级（最深）颜色
           : "hsl(var(--muted-foreground))";
 
@@ -180,10 +185,10 @@ function getLayoutedElements(
           target: String(member.id),
           type: "flowing",
           animated: false,
-          style: { 
-              stroke: edgeColor, 
-              strokeWidth: 2,
-              opacity: 0.6 // 稍微降低透明度，让文字更突出
+          style: {
+            stroke: edgeColor,
+            strokeWidth: 2,
+            opacity: 0.6 // 稍微降低透明度，让文字更突出
           },
         });
       }
@@ -200,7 +205,7 @@ function getLayoutedElements(
   const memberNodes: Node[] = visibleMembers.map((member) => {
     const nodeWithPosition = dagreGraph.node(String(member.id));
     const hasChildren = (childrenMap.get(member.id)?.length || 0) > 0;
-    
+
     // 计算左上角位置
     const x = nodeWithPosition.x - NODE_WIDTH / 2;
     const y = nodeWithPosition.y - NODE_HEIGHT / 2;
@@ -222,8 +227,8 @@ function getLayoutedElements(
     // 代数偏移量：当前代数 - (根节点代数 + 1)。这样根节点的儿子(房头)偏移为0，也就是最深色。
     // 如果 member.generation 为 null，默认给 0
     const genOffset = (member.generation || rootGeneration) - (rootGeneration + 1);
-    const nodeColor = baseColor 
-      ? generateBranchColor(baseColor, Math.max(0, genOffset)) 
+    const nodeColor = baseColor
+      ? generateBranchColor(baseColor, Math.max(0, genOffset))
       : undefined;
 
     const nodeData: FamilyNodeData = {
@@ -246,20 +251,20 @@ function getLayoutedElements(
   // 5. 生成世代标尺节点
   const generationNodes: Node[] = [];
   // 标尺 X 坐标：在最左侧节点的基础上再向左偏移
-  const labelX = minX - 140; 
+  const labelX = minX - 140;
 
   generationYMap.forEach(({ totalY, count }, generation) => {
     const avgY = totalY / count;
     // 调整 Y 坐标使其垂直居中
-    const labelY = avgY - 40; 
+    const labelY = avgY - 40;
 
     generationNodes.push({
       id: `gen-label-${generation}`,
       type: "generationLabel",
       position: { x: labelX, y: labelY },
-      data: { 
-        generation, 
-        label: `第${toChineseNum(generation)}世` 
+      data: {
+        generation,
+        label: `第${toChineseNum(generation)}世`
       },
       draggable: false,
       selectable: false,
@@ -270,7 +275,7 @@ function getLayoutedElements(
   return { nodes: [...memberNodes, ...generationNodes], edges };
 }
 
-function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
+const FamilyTreeGraphInner = memo(function FamilyTreeGraphInner({ initialData, onMemberClick }: FamilyTreeGraphInnerProps) {
   const reactFlowInstance = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
   const [userEmail, setUserEmail] = useState<string>("");
@@ -278,7 +283,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
   useEffect(() => {
     const fetchUser = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } = {} } = await supabase.auth.getUser();
       if (user?.email) {
         setUserEmail(user.email);
       }
@@ -290,12 +295,10 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
   // 新增：存储高亮路径上的所有元素 ID（节点 ID 和 连线 ID）
   const [highlightedPathIds, setHighlightedPathIds] = useState<Set<string>>(new Set());
-  
+
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<FamilyMemberNode | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDraggable, setIsDraggable] = useState(false);
-  
+
   // 折叠状态管理
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
 
@@ -321,7 +324,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
     const pathSet = new Set<string>();
     const memberMap = new Map(initialData.map(m => [m.id, m]));
-    
+
     // 1. 向上溯源 (Ancestors)
     let currentId = highlightedId;
     pathSet.add(String(currentId)); // 添加当前节点
@@ -329,12 +332,12 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     while (true) {
       const member = memberMap.get(currentId);
       if (!member || !member.father_id) break;
-      
+
       // 添加父节点 ID
       pathSet.add(String(member.father_id));
       // 添加连接线 ID (注意 edge id 格式是 e{father}-{child})
       pathSet.add(`e${member.father_id}-${currentId}`);
-      
+
       currentId = member.father_id;
     }
 
@@ -343,7 +346,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     while (queue.length > 0) {
       const parentId = queue.shift()!;
       const children = childrenMap.get(parentId) || [];
-      
+
       children.forEach(childId => {
         // 添加子节点 ID
         pathSet.add(String(childId));
@@ -405,14 +408,14 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
       nds.map((node) => {
         // 特殊处理世代标尺节点
         if (node.type === 'generationLabel') {
-            return {
-                ...node,
-                style: {
-                    ...node.style,
-                    opacity: hasHighlight ? 0.2 : 1, // 高亮时淡化标尺
-                    transition: 'opacity 0.3s ease',
-                }
-            };
+          return {
+            ...node,
+            style: {
+              ...node.style,
+              opacity: hasHighlight ? 0.2 : 1, // 高亮时淡化标尺
+              transition: 'opacity 0.3s ease',
+            }
+          };
         }
 
         const isPathNode = highlightedPathIds.has(node.id);
@@ -431,7 +434,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     setEdges((eds) =>
       eds.map((edge) => {
         const isPathEdge = highlightedPathIds.has(edge.id);
-        
+
         // 动态计算连线样式
         let strokeColor = edge.style?.stroke || "hsl(var(--muted-foreground))";
         let strokeWidth = 2;
@@ -439,14 +442,14 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         let zIndex = 0;
 
         if (hasHighlight) {
-            if (isPathEdge) {
-                strokeColor = "#f59e0b"; // amber-500: 金黄色高亮路径
-                strokeWidth = 3; // 加粗
-                opacity = 1;
-                zIndex = 10; // 浮在最上层
-            } else {
-                opacity = 0.1; // 极度淡化非相关连线
-            }
+          if (isPathEdge) {
+            strokeColor = "#f59e0b"; // amber-500: 金黄色高亮路径
+            strokeWidth = 3; // 加粗
+            opacity = 1;
+            zIndex = 10; // 浮在最上层
+          } else {
+            opacity = 0.1; // 极度淡化非相关连线
+          }
         }
 
         return {
@@ -489,24 +492,24 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     if (found) {
       let current = found;
       const idsToExpand = new Set<number>();
-      while(current.father_id) {
-         if (collapsedIds.has(current.father_id)) {
-            idsToExpand.add(current.father_id);
-         }
-         const father = initialData.find(m => m.id === current.father_id);
-         if (!father) break;
-         current = father;
+      while (current.father_id) {
+        if (collapsedIds.has(current.father_id)) {
+          idsToExpand.add(current.father_id);
+        }
+        const father = initialData.find(m => m.id === current.father_id);
+        if (!father) break;
+        current = father;
       }
 
       if (idsToExpand.size > 0) {
-          setCollapsedIds(prev => {
-              const next = new Set(prev);
-              idsToExpand.forEach(id => next.delete(id));
-              return next;
-          });
-          setTimeout(() => {
-            setHighlightedId(found.id);
-          }, 100);
+        setCollapsedIds(prev => {
+          const next = new Set(prev);
+          idsToExpand.forEach(id => next.delete(id));
+          return next;
+        });
+        setTimeout(() => {
+          setHighlightedId(found.id);
+        }, 100);
       } else {
         setHighlightedId(found.id);
       }
@@ -514,21 +517,19 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
       setHighlightedId(null);
     }
   }, [searchQuery, initialData, collapsedIds]);
-  
+
   // 监听 highlight 变化后聚焦
   useEffect(() => {
-      if (highlightedId) {
-          setTimeout(() => {
-            const node = reactFlowInstance.getNode(String(highlightedId));
-            if (node) {
-                reactFlowInstance.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
-                zoom: 1.5,
-                duration: 500,
-                });
-            }
-          }, 200);
+    if (highlightedId) {
+      const node = reactFlowInstance.getNode(String(highlightedId));
+      if (node) {
+        reactFlowInstance.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
+          zoom: 1.5,
+          duration: 500,
+        });
       }
-  }, [highlightedId, reactFlowInstance, nodes]);
+    }
+  }, [highlightedId, reactFlowInstance]);
 
   // 清除搜索
   const onClearSearch = useCallback(() => {
@@ -540,12 +541,11 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
       const member = initialData.find((m) => m.id === Number(node.id));
-      if (member) {
-        setSelectedMember(member);
-        setIsDetailOpen(true);
+      if (member && onMemberClick) {
+        onMemberClick(member);
       }
     },
-    [initialData]
+    [initialData, onMemberClick]
   );
 
   // 全屏切换
@@ -577,15 +577,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     };
   }, []);
 
-  // 获取父亲姓名
-  const getFatherName = useCallback(
-    (fatherId: number | null) => {
-      if (!fatherId) return null;
-      const father = initialData.find((m) => m.id === fatherId);
-      return father?.name || null;
-    },
-    [initialData]
-  );
+
 
   const onDownload = useCallback(async () => {
     // 获取视口元素
@@ -634,7 +626,7 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     canvas.height = imageHeight * 2.0;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     ctx.scale(2.0, 2.0);
 
     // 3. 绘制背景
@@ -662,11 +654,11 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         drawH = imageWidth / bgRatio;
         offsetY = (imageHeight - drawH) / 2;
       }
-      
+
       ctx.drawImage(bgImg, offsetX, offsetY, drawW, drawH);
     } else {
-       ctx.fillStyle = "#f9f5f0";
-       ctx.fillRect(0, 0, imageWidth, imageHeight);
+      ctx.fillStyle = "#f9f5f0";
+      ctx.fillRect(0, 0, imageWidth, imageHeight);
     }
 
     // 4. 绘制水印 (平铺)
@@ -676,12 +668,12 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
     ctx.font = "16px sans-serif";
     ctx.fillStyle = "rgba(0, 0, 0, 0.03)";
     ctx.textAlign = "center";
-    
+
     const stepX = 200;
     const stepY = 100;
     for (let x = -imageWidth; x < imageWidth * 2; x += stepX) {
       for (let y = -imageHeight; y < imageHeight * 2; y += stepY) {
-         ctx.fillText(watermarkText, x, y);
+        ctx.fillText(watermarkText, x, y);
       }
     }
     ctx.restore();
@@ -735,8 +727,10 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
+        onInit={(instance) => {
+          // 只在初始化时执行一次 fitView
+          instance.fitView({ padding: 0.2 });
+        }}
         minZoom={0.1}
         maxZoom={2}
         attributionPosition="bottom-left"
@@ -745,15 +739,15 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         nodesConnectable={false} // 禁止从节点拖出连线
         edgesFocusable={false}   // 禁止选中连线
       >
-        <Controls 
-          showInteractive={false} 
+        <Controls
+          showInteractive={false}
           className="!bg-background !border !border-border !shadow-md [&>button]:!bg-background [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-muted [&>button>svg]:!fill-current"
         />
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
 
         {/* 顶部统一工具栏：左侧搜索，右侧按钮 */}
-        <Panel 
-          position="top-left" 
+        <Panel
+          position="top-left"
           className="!absolute !top-0 !left-0 !w-full !m-0 p-2 sm:p-4 flex justify-between items-start pointer-events-none z-10"
         >
           {/* 左侧：搜索框 */}
@@ -777,22 +771,22 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
 
           {/* 右侧：操作按钮组 */}
           <div className="pointer-events-auto flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onResetView} 
-              title="将视图重置到中心位置并恢复缩放" 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onResetView}
+              title="将视图重置到中心位置并恢复缩放"
               className="bg-background/95 backdrop-blur-sm shadow-sm h-9 w-9 px-0 sm:w-auto sm:px-4"
             >
               <RotateCcw className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">重置</span>
             </Button>
 
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={toggleFullscreen} 
-              title={isFullscreen ? "退出全屏模式" : "进入全屏模式"} 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "退出全屏模式" : "进入全屏模式"}
               className="bg-background/95 backdrop-blur-sm shadow-sm h-9 w-9 px-0 sm:w-auto sm:px-4"
             >
               {isFullscreen ? (
@@ -853,6 +847,35 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
           </span>
         </Panel>
       </ReactFlow>
+    </div>
+  );
+});
+
+export function FamilyTreeGraph({ initialData }: FamilyTreeGraphProps) {
+  const [selectedMember, setSelectedMember] = useState<FamilyMemberNode | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // 获取父亲姓名
+  const getFatherName = useCallback(
+    (fatherId: number | null) => {
+      if (!fatherId) return null;
+      const father = initialData.find((m) => m.id === fatherId);
+      return father?.name || null;
+    },
+    [initialData]
+  );
+
+  // 处理成员点击
+  const handleMemberClick = useCallback((member: FamilyMemberNode) => {
+    setSelectedMember(member);
+    setIsDetailOpen(true);
+  }, []);
+
+  return (
+    <>
+      <ReactFlowProvider>
+        <FamilyTreeGraphInner initialData={initialData} onMemberClick={handleMemberClick} />
+      </ReactFlowProvider>
 
       {/* 成员详情弹窗 */}
       <MemberDetailDialog
@@ -861,14 +884,6 @@ function FamilyTreeGraphInner({ initialData }: FamilyTreeGraphProps) {
         member={selectedMember}
         fatherName={getFatherName(selectedMember?.father_id || null)}
       />
-    </div>
-  );
-}
-
-export function FamilyTreeGraph({ initialData }: FamilyTreeGraphProps) {
-  return (
-    <ReactFlowProvider>
-      <FamilyTreeGraphInner initialData={initialData} />
-    </ReactFlowProvider>
+    </>
   );
 }
