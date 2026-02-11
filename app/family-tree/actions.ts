@@ -443,7 +443,7 @@ export async function batchCreateFamilyMembers(
         .select("uid")
         .in("uid", uidsToCheck);
 
-      existingUids = new Set(existingMembers?.map((m) => m.uid) || []);
+      existingUids = new Set(existingMembers?.map((m: { uid: string }) => m.uid) || []);
     }
 
     // 第三步：过滤掉已存在的 uid，只保留新数据
