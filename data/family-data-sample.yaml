@@ -1,0 +1,54 @@
+# 族谱数据示例文件
+# YAML格式导入模板
+
+- id: G20-sample1
+  name: "侯某某"
+  gender: "男"
+  generation: 20
+  rank: 1
+  father_id: G19-father1
+  birth_date: "1990-01-01"
+  is_alive: true
+  bio_str: "字某某，生平事迹简述"
+  official_position: "进士"
+  spouse: "王氏"
+  residence_place: "某地"
+  
+- id: G21-sample1
+  name: "侯某某二"
+  gender: "男"
+  generation: 21
+  rank: 1
+  father_id: G20-sample1
+  birth_date: "2020-05-15"
+  is_alive: true
+  bio_str: "字某某，生平事迹简述"
+  official_position: "秀才"
+  spouse: "李氏"
+  residence_place: "某地"
+  
+- id: G21-sample2
+  name: "侯某某三"
+  gender: "女"
+  generation: 21
+  rank: 2
+  father_id: G20-sample1
+  birth_date: "2022-03-10"
+  is_alive: true
+  bio_str: "嫁某地张家"
+  spouse: "张氏门第"
+  residence_place: "某地"
+
+# 支持的字段说明：
+# id: 唯一标识符（格式：G{世代}-{随机字符串}）
+# name: 姓名（必填）
+# gender: 性别（"男" 或 "女"）
+# generation: 世代数
+# rank: 在兄弟姐妹中的排行
+# father_id: 父亲的ID（需要对应现有成员的ID）
+# birth_date: 生日（YYYY-MM-DD 或 YYYY格式）
+# is_alive: 是否在世（true 或 false）
+# bio_str: 生平事迹/备注
+# official_position: 官职（可选）
+# spouse: 配偶姓名（可选）
+# residence_place: 居住地（可选）
