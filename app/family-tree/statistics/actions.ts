@@ -32,7 +32,7 @@ export async function fetchFamilyStatistics(): Promise<{
 
   // 1. Gender Statistics
   const genderCounts = members.reduce(
-    (acc, member) => {
+    (acc: Record<string, number>, member: any) => {
       const gender = member.gender || "未知";
       acc[gender] = (acc[gender] || 0) + 1;
       return acc;
@@ -54,7 +54,7 @@ export async function fetchFamilyStatistics(): Promise<{
 
   // 2. Generation Statistics
   const generationCounts = members.reduce(
-    (acc, member) => {
+    (acc: Record<string, number>, member: any) => {
       const gen = member.generation ? `第${member.generation}世` : "未知";
       acc[gen] = (acc[gen] || 0) + 1;
       return acc;
@@ -78,7 +78,7 @@ export async function fetchFamilyStatistics(): Promise<{
 
   // 3. Status Statistics (Alive vs Deceased)
   const statusCounts = members.reduce(
-    (acc, member) => {
+    (acc: Record<string, number>, member: any) => {
       const status = member.is_alive ? "在世" : "已故";
       acc[status] = (acc[status] || 0) + 1;
       return acc;
@@ -105,7 +105,7 @@ export async function fetchFamilyStatistics(): Promise<{
     "80岁以上": 0,
   };
 
-  members.forEach((member) => {
+  members.forEach((member: any) => {
     if (member.is_alive && member.birth_date) {
       const age = now.getFullYear() - member.birth_date;
 
@@ -137,7 +137,7 @@ export async function fetchFamilyStatistics(): Promise<{
   // Let's do: Most frequent Given Names (excluding surname). Assuming surname is 1st char for now (imperfect but simple).
   // Better: Just simple duplicate name check.
   const nameCounts: Record<string, number> = {};
-  members.forEach((m) => {
+  members.forEach((m: any) => {
     // Naive assumption: First char is surname.
     const givenName = m.name.length > 1 ? m.name.substring(1) : m.name;
     // Count individual characters in given name for "Generation Name" (Zi) trends?

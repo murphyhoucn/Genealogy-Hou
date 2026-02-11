@@ -67,17 +67,17 @@ export async function fetchMembersWithBiography(): Promise<{
         } catch {
             // 如果不是 JSON，检查是否为非空字符串且不只是ID信息
             const lines = remarksText.split('\n');
-            return lines.some(line => 
+            return lines.some((line: string) => 
                 !line.startsWith('ID:') && 
                 !line.startsWith('FATHER_ID:') && 
                 line.trim().length > 0
             );
         }
-    });
+    }) as any[];
 
     // 获取所有父亲 UID
     const fatherUids = validData
-        .map((item) => item.father_uid)
+        .map((item: any) => item.father_uid)
         .filter((id): id is string => !!id);
 
     // 批量查询父亲姓名
@@ -89,12 +89,12 @@ export async function fetchMembersWithBiography(): Promise<{
             .in("uid", fatherUids);
 
         if (fathers) {
-            fatherMap = Object.fromEntries(fathers.map((f) => [f.uid, f.name]));
+            fatherMap = Object.fromEntries(fathers.map((f: { uid: string; name: string }) => [f.uid, f.name]));
         }
     }
 
     // 转换数据格式
-    const transformedData: BiographyMember[] = validData.map((item) => ({
+    const transformedData: BiographyMember[] = validData.map((item: any) => ({
         id: item.id,
         name: item.name,
         generation: item.generation,
