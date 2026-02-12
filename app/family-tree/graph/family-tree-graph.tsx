@@ -662,7 +662,7 @@ const FamilyTreeGraphInner = memo(function FamilyTreeGraphInner({ initialData, o
     }
 
     // 4. 绘制水印 (平铺)
-    const watermarkText = userEmail || 'Liu Family';
+    const watermarkText = userEmail || 'Genelogy Tree';
     ctx.save();
     ctx.rotate(-30 * Math.PI / 180);
     ctx.font = "16px sans-serif";

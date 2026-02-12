@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutDashboard } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "族谱关系图 (3D) | Liu Family",
+  title: "族谱关系图 (3D)",
   description: "三维视角的家族族谱关系图",
 };
 
