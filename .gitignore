@@ -42,4 +42,4 @@ yarn-error.log*
 next-env.d.ts
 
 # data
-/family
+/family_tree/family_data

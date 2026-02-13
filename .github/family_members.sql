@@ -1,42 +1,43 @@
--- 创建家族成员表
+-- ========================================
+-- 创建 family_members 表 - 统一字段模式
+-- ========================================
+-- 在 Supabase SQL Editor 中直接执行
+
+-- 删除旧表（如有）
+DROP TABLE IF EXISTS family_members CASCADE;
+
+-- 创建新表
 CREATE TABLE family_members (
-id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  uid text UNIQUE,
-  father_uid text,
-  generation integer,
-  name text NOT NULL,
-  gender text CHECK (gender = ANY (ARRAY['男'::text, '女'::text])),
-  sibling_order integer,
-  is_alive boolean DEFAULT true,
-  birth_date integer,
-  death_date integer,
-  official_position text,
-  residence_place text,
-  bio text,
-  spouse text,
-  updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT family_members_pkey PRIMARY KEY (id)
+  -- 系统字段
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  updated_at timestamp with time zone DEFAULT now(),
+  
+  -- 核心字段（13项）
+  uid TEXT NOT NULL UNIQUE,                    -- 族谱ID（如 P001, P002）
+  name TEXT NOT NULL,                          -- 姓名
+  generation INTEGER,                          -- 第几代
+  sibling_order INTEGER,                       -- 兄弟姐妹排序
+  father_uid TEXT,                             -- 父亲的 uid（自引用）
+  gender TEXT CHECK (gender IN ('男', '女')), -- 性别
+  is_alive BOOLEAN,                            -- 是否在世
+  birth_date INTEGER,                          -- 出生年份（整数）
+  death_date INTEGER,                          -- 死亡年份（整数）
+  official_position TEXT,                      -- 官职
+  residence_place TEXT,                        -- 住所
+  bio TEXT,                                    -- 个人传记
+  spouse TEXT                                  -- 配偶名字
 );
 
--- 为字段添加注释
-COMMENT ON TABLE family_members IS '家族成员信息表';
-COMMENT ON COLUMN family_members.id IS '唯一标识 ID';
-COMMENT ON COLUMN family_members.uid IS '成员唯一标识（如 G21-7zZJUY）';
-COMMENT ON COLUMN family_members.father_uid IS '父亲的 uid';
-COMMENT ON COLUMN family_members.generation IS '世代';
-COMMENT ON COLUMN family_members.name IS '姓名';
-COMMENT ON COLUMN family_members.gender IS '性别';
-COMMENT ON COLUMN family_members.sibling_order IS '排行';
-COMMENT ON COLUMN family_members.is_alive IS '是否在世';
-COMMENT ON COLUMN family_members.birth_date IS '出生年份（YYYY）';
-COMMENT ON COLUMN family_members.death_date IS '去世年份（YYYY）';
-COMMENT ON COLUMN family_members.official_position IS '官职';
-COMMENT ON COLUMN family_members.residence_place IS '居住地';
-COMMENT ON COLUMN family_members.bio IS '生平事迹（富文本JSON格式）';
-COMMENT ON COLUMN family_members.spouse IS '配偶姓名';
-COMMENT ON COLUMN family_members.updated_at IS '最后更新时间';
-
--- 创建索引以优化查询速度
+-- 创建索引优化查询
 CREATE INDEX idx_family_members_uid ON family_members(uid);
 CREATE INDEX idx_family_members_father_uid ON family_members(father_uid);
 CREATE INDEX idx_family_members_name ON family_members(name);
+CREATE INDEX idx_family_members_generation ON family_members(generation);
+
+-- ========================================
+-- 表结构完成！字段列表：
+-- id (自增主键), updated_at (时间戳),
+-- uid, name, generation, sibling_order, father_uid,
+-- gender, is_alive, birth_date, death_date,
+-- official_position, residence_place, bio, spouse
+-- ========================================
