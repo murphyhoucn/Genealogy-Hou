@@ -20,7 +20,6 @@
 
 ## 🚀 快速开始
 
-`ash
 # 1. 克隆项目
 ``` bash
 git clone https://github.com/murphyhoucn/Genealogy-Hou
