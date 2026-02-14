@@ -365,11 +365,8 @@ export async function updateFamilyMember(
       return { success: false, error: "请先登录后再进行数据管理操作" };
     }
 
-    const { error } = await supabase
-    .from("family_members")
-    .update({
+    const updatePayload: Record<string, unknown> = {
       name: input.name,
-      uid: input.uid,
       father_uid: input.father_uid || null,
       generation: input.generation,
       gender: input.gender,
@@ -382,8 +379,16 @@ export async function updateFamilyMember(
       death_date: parseYear(input.death_date),
       residence_place: input.residence_place,
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", input.id);
+    };
+
+    if (input.uid) {
+      updatePayload.uid = input.uid;
+    }
+
+    const { error } = await supabase
+      .from("family_members")
+      .update(updatePayload)
+      .eq("id", input.id);
 
     if (error) {
       return { success: false, error: error.message };
